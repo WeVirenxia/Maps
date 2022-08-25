@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:map="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <fragment
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MapsActivity" />
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:text="Click me" />
+    <com.github.clans.fab.FloatingActionMenu
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        map:menu_colorNormal="#6ec00c"
+        map:menu_colorPressed="#fff"
+        map:menu_colorRipple="#66FF88"
+        android:layout_margin="16dp">
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/menu_item"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_start"
+            map:fab_colorNormal="#6ec00c"
+            map:fab_colorPressed="#fff"
+            map:fab_size="mini"
+            map:fab_label="Start"/>
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/menu_item2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_delete"
+            map:fab_colorNormal="#6ec00c"
+            map:fab_colorPressed="#fff"
+            map:fab_size="mini"
+            map:fab_label="Clear"/>
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/menu_item3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_baseline_control_point_24"
+            map:fab_colorNormal="#6ec00c"
+            map:fab_colorPressed="#fff"
+            map:fab_size="mini"
+            map:fab_label="Add Point"/>
+
+
+    </com.github.clans.fab.FloatingActionMenu>
+</RelativeLayout>
