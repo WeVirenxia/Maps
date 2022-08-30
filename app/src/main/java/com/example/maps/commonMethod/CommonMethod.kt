@@ -2,9 +2,16 @@ package com.example.maps.commonMethod
 
 import android.app.AlertDialog
 import android.content.Context
+import android.graphics.Color
 import android.net.ConnectivityManager
 import android.util.Log
+import android.view.Gravity
+import android.widget.FrameLayout
+import android.widget.TextView
 import com.example.maps.Coordinates
+import com.example.maps.R
+import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.firestore.core.View
 
 class CommonMethod {
 
@@ -59,6 +66,19 @@ class CommonMethod {
             //On pressing cancel button
             alertDialog.setNegativeButton("OK") { dialog, _ -> dialog.cancel() }
             alertDialog.show()
+        }
+
+         fun showSnackBar(view: android.view.View,message:String){
+            val snackbar= Snackbar.make(view, message, Snackbar.LENGTH_SHORT)
+            val snackbarView=snackbar.view
+            val params = snackbarView.layoutParams as FrameLayout.LayoutParams
+            params.gravity = Gravity.TOP
+            snackbarView.layoutParams = params
+            val textView =
+                snackbarView.findViewById(com.google.android.material.R.id.snackbar_text) as TextView
+            textView.setTextColor(Color.BLACK)
+            snackbarView.setBackgroundResource(R.color.cardBackground)
+            snackbar.show()
         }
     }
 }

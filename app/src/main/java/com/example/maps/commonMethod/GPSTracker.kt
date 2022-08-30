@@ -242,7 +242,11 @@ class GPSTracker(private val mContext: Context) : Service(), LocationListener {
         }
     }
 
-    override fun onLocationChanged(location: Location) {}
+    override fun onLocationChanged(location: Location) {
+       /* latitude=location.latitude
+        longitude=location.longitude
+        Log.d("TAG","Loaction in onlocation changes $latitude,$longitude")*/
+    }
     override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {}
     override fun onProviderEnabled(provider: String) {}
     override fun onProviderDisabled(provider: String) {}

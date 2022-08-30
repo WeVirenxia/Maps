@@ -57,7 +57,19 @@
             map:fab_colorNormal="#6ec00c"
             map:fab_colorPressed="#fff"
             map:fab_size="mini"
+            android:visibility="gone"
             map:fab_label="Add Point"/>
+
+        <com.github.clans.fab.FloatingActionButton
+            android:id="@+id/menu_item4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_auto"
+            map:fab_colorNormal="#6ec00c"
+            map:fab_colorPressed="#fff"
+            map:fab_size="mini"
+            android:visibility="gone"
+            map:fab_label="Auto"/>
 
 
     </com.github.clans.fab.FloatingActionMenu>

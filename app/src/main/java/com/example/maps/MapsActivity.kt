@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -21,11 +22,10 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
-import com.google.firebase.firestore.core.View
-import io.reactivex.Completable
-import io.reactivex.CompletableObserver
-import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
+import com.google.gson.Gson
+import org.json.JSONArray
+import java.util.*
+
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -36,10 +36,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private var initialLocation: LatLng? = null
     private var gpsTracker: GPSTracker? = null
     var coordinates: Coordinates? = null
-    var isStopped = false
+    private var isStopped = false
+    var isAuto = false
     var mapFragment: SupportMapFragment? = null
     private val coordinatesList = mutableListOf<LatLng>()
     private lateinit var mapViewModel: MapViewModel
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,33 +71,52 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             //plotPoints(coordinatesList)
             //coordinatesList.subList(1,coordinatesList.size).clear()
             //coordinatesList.clear()
-            getCurrentLocation()
-            Toast.makeText(applicationContext,"latitude:${coordinates?.latitude},logitude:${coordinates?.longitude}",Toast.LENGTH_LONG).show()
+            //getCurrentLocation()
+            /*val toast= Toast.makeText(applicationContext,"latitude:${coordinates?.latitude},logitude:${coordinates?.longitude}",Toast.LENGTH_LONG)
+            toast.setGravity(Gravity.TOP,0,0)
+            toast.show()*/
+            getJson(coordinatesList)
+            CommonMethod.showSnackBar(binding.root,"latitude:${coordinates?.latitude},logitude:${coordinates?.longitude}")
         }
+        // start and stop
         binding.menuItem.setOnClickListener {
             isStopped = !isStopped
             if (isStopped) {
                 binding.menuItem.labelText = "Stop"
                 binding.menuItem.setImageDrawable(resources.getDrawable(R.drawable.ic_stop))
+                binding.menuItem3.visibility=View.VISIBLE
+                binding.menuItem4.visibility=View.VISIBLE
             } else {
                 binding.menuItem.labelText = "Start"
                 binding.menuItem.setImageDrawable(resources.getDrawable(R.drawable.ic_start))
+                binding.menuItem3.visibility=View.GONE
+                binding.menuItem4.visibility=View.GONE
+                isAuto=false
+                binding.menuItem4.isEnabled=true
+                if (coordinatesList.size>2){
+                    jointLastPoints()
+                }
             }
 
         }
+        //clear
         binding.menuItem2.setOnClickListener {
             coordinatesList.clear()
             mMap.clear()
             mapFragment?.getMapAsync(this)
         }
-
+        //add point
         binding.menuItem3.setOnClickListener {
             if (isStopped) {
                 binding.menuItem3.isEnabled=false
                 if (CommonMethod.isNetworkConnected(applicationContext)) {
                     //mapViewModel.getCurrentLocation(applicationContext)
                     getCurrentLocation()
-                    Toast.makeText(applicationContext,"latitude:${coordinates?.latitude},logitude:${coordinates?.longitude}",Toast.LENGTH_LONG).show()
+                    /*val toast:Toast=Toast.makeText(applicationContext,"latitude:${coordinates?.latitude},logitude:${coordinates?.longitude}",Toast.LENGTH_LONG)
+                    toast.setGravity(Gravity.TOP,0,0)
+                    toast.show()*/
+                    Handler().postDelayed({binding.menuItem3.isEnabled = true },5000)
+                    CommonMethod.showSnackBar(binding.root,"latitude:${coordinates?.latitude},logitude:${coordinates?.longitude}")
                 }else{
                     Toast.makeText(applicationContext,"Turn On Internet",Toast.LENGTH_LONG).show()
                 }
@@ -107,19 +129,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             }
             Log.d("TAG", "size of the list ${coordinatesList.size}")
         }
+        //auto
+        binding.menuItem4.setOnClickListener {
+            isAuto=true
+            binding.menuItem4.isEnabled=false
+            binding.menuItem3.visibility=View.GONE
+            autoPlotting()
+        }
 
     }
-
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
-
     private fun setObservers() {
         mapViewModel.coordinatesLiveDataList.observe(this, Observer {
             Log.d("TAG", "List of coordinates $it")
@@ -131,9 +149,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-        // Add a marker in Sydney and move the camera
-        // val sydney = LatLng(-34.0, 151.0)
-        //val vashi = LatLng(19.0856733, 73.005094)
+        mMap.isMyLocationEnabled=true
         if (CommonMethod.isNetworkConnected(applicationContext)) {
            // mapViewModel.getCurrentLocation(applicationContext)
             getCurrentLocation()
@@ -157,42 +173,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 plotPoints(coordinatesList)
             }
 
-            /*if (initialClick==null){
-                initialClick= LatLng(it.latitude,it.longitude)
-            }else{
-                secondClick = LatLng(it.latitude,it.longitude)
-                plotPoints(initialClick!!, secondClick!!)
-                initialClick=secondClick
-            }*/
-
-
-            //plotPoints(initialClick, secondClick)
-            /* val polylineOptions = PolylineOptions()
-             polylineOptions.add(vashi)
-             polylineOptions.add(LatLng(it.latitude,it.longitude))
-             mMap.clear()
-             mMap.addPolyline(polylineOptions)*/
         }
 
     }
 
-    /*fun plotPoints(initialClick:LatLng,secondClick:LatLng){
-        val polylineOptions = PolylineOptions()
-        polylineOptions.add(initialClick)
-        polylineOptions.add(secondClick)
-        mMap.clear()
-        mMap.addPolyline(polylineOptions)
-    }*/
-
-    private fun plotPoints(list: List<LatLng>) {
+    private fun plotPoints(list: MutableList<LatLng>) {
         val polylineOptions = PolylineOptions()
         if (list.size > 1) {
             for (i in list) {
-                polylineOptions.add(i)
+                polylineOptions.width(10F)
+                polylineOptions.add(i).color(resources.getColor(R.color.colorVirenxia))
                 mMap.addMarker(MarkerOptions().position(i).title("Marker"))
                 mMap.clear()
                 mMap.addPolyline(polylineOptions)
             }
+
             /*mMap.clear()
             mMap.addPolyline(polylineOptions)*/
             Log.d("TAG","inside PlotPoints")
@@ -208,14 +203,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 Log.d("TAG","Coorrdiotes recieved $coordinates")
             } else {
                 gpsTracker!!.showSettingsAlert()
-                // Navigation.findNavController(fragmentWeatherBinding.root).navigate(R.id.action_weather_to_category)
             }
         val currentLocation = LatLng(coordinates!!.latitude, coordinates!!.longitude)
         coordinatesList.add(currentLocation)
         Log.d("TAG","Coorrdiotes List ${coordinatesList.size}")
         if (coordinatesList.size>1){
-         //   plotPoints(coordinatesList)
-            binding.menuItem3.isEnabled=true
+            plotPoints(coordinatesList)
+            //binding.menuItem3.isEnabled=true
         }
 
     }
@@ -254,5 +248,45 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             //requireActivity().finish()
         }
     }
+ private fun getJson(coordinateList:MutableList<LatLng>){
+     //val jsArray = JSONArray(coordinateList)
+     val jsArray = Gson().toJson(coordinateList)
+     val newJSONObject= JSONArray()
+     val jsonArray=JSONArray(jsArray)
+    /* for (i in 1..jsonObject.length()){
+         val mainObj:JSONObject= jsonObject.get(i.toString()) as JSONObject
+         mainObj.put("Sr No.",i)
+         newJSONObject.put(i.toString(),mainObj)
+         Log.d("TAG","newvalue : ${mainObj.toString()}")
+     }*/
+     for (i in 0 until jsonArray.length()){
+         val mainObj=jsonArray.getJSONObject(i)
+         mainObj.put("Sr No.",i+1)
+         newJSONObject.put(mainObj)
+     }
+     Log.d("TAG","New Json: ${newJSONObject.toString()}")
+     Log.d("TAG","Json length : ${jsonArray.length()}")
+     //Log.d("TAG","Json : ${jsArray.toString()}")
+ }
+
+    private fun jointLastPoints(){
+        val firstPoint= coordinatesList[0]
+        coordinatesList.add(firstPoint)
+        plotPoints(coordinatesList)
+    }
+
+    private fun autoPlotting(){
+            val timer=Timer()
+            timer.schedule(object : TimerTask() {
+                override fun run() {
+                    runOnUiThread {
+                        if (isAuto){
+                            getCurrentLocation()
+                            Log.d("TAG","hello world")
+                        }
+                    }
+                }
+            }, 0, 10000)
+        }
 
 }
